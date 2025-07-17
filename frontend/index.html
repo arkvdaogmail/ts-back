@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TrustSeal Proof MVP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./style.css">
+<script src="https://js.stripe.com/v3/"></script>
+<script defer src="./config.js"></script>
+<script defer src="./app.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <h1>TrustSeal Test</h1>
+  <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt">
+  <select id="serviceType">
+    <option>Creative Proof</option>
+    <option>Car Accident</option>
+    <option>Rental Contract</option>
+    <option>Personal Loan</option>
+    <option>Logistics POD</option>
+    <option>Other</option>
+  </select>
+  <input type="email" id="email" placeholder="email">
+  <button id="startBtn">Hash + Pay</button>
+  <div id="paymentElementWrap" style="display:none;">
+    <div id="payment-request-button"></div>
+    <div id="payment-element"></div>
+    <button id="confirmPayBtn">Confirm Payment</button>
+  </div>
+  <div id="status"></div>
+</div>
+</body>
+</html>
