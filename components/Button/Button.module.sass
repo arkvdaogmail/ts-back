@@ -37,6 +37,50 @@
                 opacity: 1
                 transform: scale(1)
 
+// Secondary button variant
+.secondary
+    &:before
+        background: rgba(248, 248, 248, 0.1)
+        box-shadow: inset 2px 4px 16px 0px rgba(40, 40, 40, 0.1)
+    &:after
+        border: 1px solid rgba(40, 40, 40, 0.3)
+    color: $text-primary
+
+// Small button variant
+.small
+    height: 40px
+    padding: 0 24px
+    font-size: 12px
+    border-radius: 24px
+    &:before,
+    &:after
+        border-radius: 24px
+
+// Outline button variant
+.outline
+    &:before
+        background: transparent
+        box-shadow: none
+    &:after
+        border: 2px solid rgba(248, 248, 248, 0.4)
+        opacity: 1
+    color: $text-primary
+    &:hover
+        &:after
+            border-color: rgba(248, 248, 248, 0.8)
+
+// Icon button variant
+.icon
+    width: 52px
+    padding: 0
+    &:hover
+        .circle
+            &:before
+                opacity: 0
+            &:after
+                opacity: 1
+                transform: scale(1)
+
 .title
     position: relative
     z-index: 4
