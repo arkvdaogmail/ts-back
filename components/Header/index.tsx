@@ -38,11 +38,23 @@ const Header = ({}: HeaderProps) => {
                             alt=""
                         />
                     </Link>
-                    <Button
-                        className={styles.button}
-                        title="Try it for free"
-                        href="https://ui8-bento-elements.vercel.app/"
-                    />
+                    <div className={styles.buttonGroup}>
+                        <Button
+                            className={styles.button}
+                            title="Try it for free"
+                            href="https://ui8-bento-elements.vercel.app/"
+                        />
+                        <Button
+                            className={styles.button}
+                            title="Learn More"
+                            variant="secondary"
+                        />
+                        <Button
+                            className={styles.button}
+                            title="+"
+                            variant="icon"
+                        />
+                    </div>
                     <div
                         className={cn(styles.overlay, {
                             [styles.visible]: headerStyle,
