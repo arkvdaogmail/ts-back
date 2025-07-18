@@ -11,7 +11,7 @@ const StarField = ({}: StarFieldProps) => {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     };
 
-    const [stars, setStars] = useState<JSX.Element[]>([]);
+    const [stars, setStars] = useState<React.ReactElement[]>([]);
 
     useEffect(() => {
         const newStars = [];
