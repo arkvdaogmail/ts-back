@@ -1,0 +1,40 @@
+@import @/styles/variables
+@import @/styles/helpers
+
+.outer
+    position: relative
+    min-height: 100vh
+    background: $n8
+    +dark
+        background: $n1
+
+.container
+    padding: 80px 20px
+    text-align: center
+    
+    h1
+        font-size: 48px
+        margin-bottom: 40px
+        color: $n1
+        +dark
+            color: $n8
+
+.links
+    display: flex
+    gap: 20px
+    justify-content: center
+    margin-top: 40px
+
+.link
+    display: inline-block
+    padding: 12px 32px
+    background: $p1
+    color: white
+    text-decoration: none
+    border-radius: 8px
+    font-weight: 600
+    transition: all 0.2s
+    
+    &:hover
+        background: darken($p1, 10%)
+        transform: translateY(-2px)
