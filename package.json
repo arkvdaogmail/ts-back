@@ -1,0 +1,38 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arkvdaogmail/ts-back.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arkvdaogmail/ts-back/issues"
+  },
+  "homepage": "https://github.com/arkvdaogmail/ts-back#readme",
+  "description": "",
+  "dependencies": {
+    "@n8tb1t/use-scroll-position": "^2.0.3",
+    "classnames": "^2.5.1",
+    "next": "^15.4.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-scroll-parallax": "^3.4.5",
+    "sass": "^1.89.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.14",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "typescript": "^5.8.3"
+  }
+}
