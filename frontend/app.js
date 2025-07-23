@@ -99,4 +99,10 @@ async function pollChain(){
  }
  log('Timed out. POST /api/vechain/write manually to force.');
 }
+
+// ---- Add this at the end ----
+$('#fileInput').addEventListener('change', function() {
+  const file = this.files[0];
+  $('#fileName').textContent = file ? file.name : 'No file selected';
+});
 })();
