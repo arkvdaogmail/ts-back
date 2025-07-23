@@ -44,25 +44,32 @@ $('#startBtn').addEventListener('click', async ()=>{
  const svc=$('#serviceType').value;
  if(!file||!email){log('Need file + email');return;}
  log('Hashing...');
- currentHash=await sha256File(file);
- log('SHA256='+currentHash);
+ try {
+   currentHash=await sha256File(file);
+   log('SHA256='+currentHash);
 
- log('Create pending record...');
- await fetch(`${cfg.BACKEND_BASE}/api/hash`,{
-   method:'POST',
-   headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({hash:currentHash,email,service_type:svc})
- }).then(r=>r.json()).then(j=>{if(j.error)throw new Error(j.error)});
+   log('Create pending record...');
+   const hashResp = await fetch(`${cfg.BACKEND_BASE}/api/hash`,{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({hash:currentHash,email,service_type:svc})
+   });
+   const hashData = await hashResp.json();
+   if(hashData.error) throw new Error(hashData.error);
 
- log('Create Stripe PI...');
- const piRes=await fetch(`${cfg.BACKEND_BASE}/api/pay/create-intent`,{
-   method:'POST',
-   headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({hash:currentHash,email,service_type:svc})
- }).then(r=>r.json());
- if(piRes.error){log('PI error:'+piRes.error);return;}
- clientSecret=piRes.clientSecret;
- mountPaymentUI();
+   log('Create Stripe PI...');
+   const piResResp = await fetch(`${cfg.BACKEND_BASE}/api/pay/create-intent`,{
+     method:'POST',
+     headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({hash:currentHash,email,service_type:svc})
+   });
+   const piRes = await piResResp.json();
+   if(piRes.error){log('PI error:'+piRes.error);return;}
+   clientSecret=piRes.clientSecret;
+   mountPaymentUI();
+ } catch(e) {
+   log('<span style="color:red;">Error: '+e.message+'</span>');
+ }
 });
 
 $('#confirmPayBtn').addEventListener('click', async ()=>{
