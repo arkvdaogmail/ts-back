@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Notarize Test</title>
+  <style>
+    body { background: #18191A; color: #F5F6FA; font-family: sans-serif; padding: 2em; }
+    input, button { margin: 1em 0; }
+    .hash { color: #00E8A2; }
+    .badge { background: #23272F; color: #00E8A2; padding: 1em; border-radius: 6px; margin-top: 1em; }
+    a { color: #4ED7C7; }
+  </style>
+</head>
+<body>
+  <h2>Notarize File (Test)</h2>
+  <input type="file" id="fileInput" /><br>
+  <button id="hashBtn">1️⃣ Generate SHA-256 Hash</button>
+  <div id="hashResult"></div>
+  <button id="notarizeBtn" style="display:none;">2️⃣ Notarize</button>
+  <div id="notarizeResult"></div>
+  <script>
+    let theHash = "";
+    document.getElementById("hashBtn").onclick = async () => {
+      const fileInput = document.getElementById("fileInput");
+      if (!fileInput.files.length) return alert("No file selected!");
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+      const res = await fetch("/api/notarize/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      theHash = data.hash;
+      document.getElementById("hashResult").innerHTML = "Hash: <span class='hash'>" + theHash + "</span>";
+      document.getElementById("notarizeBtn").style.display = "inline-block";
+    };
+    document.getElementById("notarizeBtn").onclick = async () => {
+      const res = await fetch("/api/notarize/commit", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hash: theHash })
+      });
+      const data = await res.json();
+      if (data.notarized) {
+        document.getElementById("notarizeResult").innerHTML = 
+          "<div class='badge'>✅ Notarized!<br><a href='" + data.explorerUrl + "' target='_blank'>View TX</a></div>";
+      }
+    };
+  </script>
+</body>
+</html>
