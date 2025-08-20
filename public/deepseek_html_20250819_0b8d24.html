@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Supabase GitHub Test</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <button id="loginBtn">Login with GitHub</button>
+  <input type="file" id="fileInput" style="display: none;">
+  <button id="uploadBtn" disabled>Upload Test File</button>
+  <div id="status"></div>
+
+  <script>
+    // Initialize Supabase (use your actual credentials)
+    const supabase = supabase.createClient(
+      'https://mfrefbmnxygeahaluhzr.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mcmVmYm1ueHlnZWFoYWx1aHpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NDIxOTUsImV4cCI6MjA2ODExODE5NX0.Ur3hl7rVEWk6U-ydNbKymFmXtxUlx6RTn0pU0EnP7u0'
+    );
+
+    // GitHub Login
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github'
+      });
+      if (error) document.getElementById('status').textContent = error.message;
+    });
+
+    // File Upload
+    document.getElementById('uploadBtn').addEventListener('click', async () => {
+      const fileInput = document.getElementById('fileInput');
+      fileInput.click();
+      
+      fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        const { error } = await supabase.storage
+          .from('trust_seal_documents')
+          .upload(`user_uploads/${file.name}`, file);
+        
+        document.getElementById('status').textContent = 
+          error ? `Upload failed: ${error.message}` 
+               : `Uploaded: ${file.name}`;
+      });
+    });
+
+    // Enable upload button when logged in
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        document.getElementById('uploadBtn').disabled = false;
+        document.getElementById('status').textContent = "Logged in!";
+      }
+    });
+  </script>
+</body>
+</html>

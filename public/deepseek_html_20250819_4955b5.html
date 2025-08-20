@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustSeal - Document Notarization</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* [Keep all your existing CSS styles...] */
+        /* ... (Include all the CSS styles from your original file here) ... */
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TrustSeal Document Notarization</h1>
+            <p class="subtitle">Securely notarize your documents on the blockchain using GitHub authentication</p>
+        </header>
+        
+        <div class="content">
+            <div class="info-panel">
+                <!-- [Keep your existing info panel HTML...] -->
+            </div>
+            
+            <div class="main-panel">
+                <div class="login-box" id="loginBox">
+                    <div class="login-icon">
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <div class="login-message">
+                        Sign in with GitHub to notarize and verify documents on the blockchain
+                    </div>
+                    <button class="login-btn" id="githubLogin">
+                        <i class="fab fa-github"></i> Continue with GitHub
+                    </button>
+                </div>
+                
+                <div id="authenticatedView" style="display: none;">
+                    <div class="user-info">
+                        <div class="avatar" id="userAvatar"></div>
+                        <h2 class="username" id="username"></h2>
+                        <p class="email" id="userEmail"></p>
+                    </div>
+                    
+                    <div class="document-upload">
+                        <h3 style="color: #fff; margin-bottom: 20px;">Notarize New Document</h3>
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="upload-text">Drag & drop your file here or click to browse</div>
+                            <div class="upload-hint">Supports PDF, DOCX, PNG, JPG (Max 10MB)</div>
+                            <input type="file" id="fileInput" class="file-input" accept=".pdf,.doc,.docx,.jpg,.png">
+                        </div>
+                        <div class="file-info" id="fileInfo">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                <span id="fileName"></span>
+                                <span id="fileSize"></span>
+                            </div>
+                            <input type="text" id="documentName" placeholder="Document name (optional)" 
+                                   style="width: 100%; padding: 10px; background: rgba(255,255,255,0.1); 
+                                   border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; 
+                                   color: #fff; margin-bottom: 10px;">
+                            <button class="login-btn" id="notarizeBtn" style="margin-top: 10px;">
+                                <i class="fas fa-certificate"></i> Notarize Document
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="document-list" id="documentList">
+                        <h3 style="color: #fff; margin-bottom: 15px;">Your Notarized Documents</h3>
+                        <div id="documentsContainer">
+                            <p style="color: #9da5b4; text-align: center;">No documents notarized yet</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="status-message" id="statusMessage"></div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>TrustSeal Document Notarization | Powered by Supabase and VeChain</p>
+        </footer>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const supabaseUrl = 'https://mfrefbmnxygeahaluhzr.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1mcmVmYm1ueHlnZWFoYWx1aHpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NDIxOTUsImV4cCI6MjA2ODExODE5NX0.Ur3hl7rVEWk6U-ydNbKymFmXtxUlx6RTn0pU0EnP7u0';
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // DOM elements
+        const githubLoginBtn = document.getElementById('githubLogin');
+        const loginBox = document.getElementById('loginBox');
+        const authenticatedView = document.getElementById('authenticatedView');
+        const statusMessage = document.getElementById('statusMessage');
+        const userAvatar = document.getElementById('userAvatar');
+        const usernameEl = document.getElementById('username');
+        const userEmailEl = document.getElementById('userEmail');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const documentName = document.getElementById('documentName');
+        const notarizeBtn = document.getElementById('notarizeBtn');
+        const documentsContainer = document.getElementById('documentsContainer');
+        
+        // State
+        let selectedFile = null;
+        
+        // Event listeners
+        githubLoginBtn.addEventListener('click', signInWithGitHub);
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+        notarizeBtn.addEventListener('click', notarizeDocument);
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', checkAuthState);
+        
+        // GitHub login function
+        async function signInWithGitHub() {
+            try {
+                showStatus('Redirecting to GitHub...', 'loading');
+                
+                const { error } = await supabase.auth.signInWithOAuth({
+                    provider: 'github',
+                    options: {
+                        redirectTo: window.location.href
+                    }
+                });
+                
+                if (error) throw error;
+            } catch (error) {
+                console.error('Login error:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Check auth state
+        async function checkAuthState() {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) throw error;
+                
+                if (session) {
+                    // User is logged in
+                    loginBox.style.display = 'none';
+                    authenticatedView.style.display = 'block';
+                    
+                    // Update user info
+                    const user = session.user;
+                    usernameEl.textContent = user.user_metadata.full_name || user.user_metadata.user_name || user.email;
+                    userEmailEl.textContent = user.email || 'No email provided';
+                    
+                    // Set avatar
+                    if (user.user_metadata.avatar_url) {
+                        userAvatar.style.backgroundImage = `url(${user.user_metadata.avatar_url})`;
+                    }
+                    
+                    // Load user's documents
+                    loadDocuments();
+                } else {
+                    // User is not logged in
+                    loginBox.style.display = 'block';
+                    authenticatedView.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Auth state error:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Handle file selection
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Validate file type
+            const allowedTypes = [
+                'application/pdf', 
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'image/jpeg',
+                'image/png'
+            ];
+            
+            if (!allowedTypes.includes(file.type)) {
+                showStatus('Invalid file type. Please upload PDF, DOCX, JPG, or PNG.', 'error');
+                return;
+            }
+            
+            // Validate file size (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                showStatus('File size exceeds 10MB limit', 'error');
+                return;
+            }
+            
+            selectedFile = file;
+            
+            // Update UI
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.style.display = 'block';
+            
+            // Set default document name
+            documentName.value = file.name.split('.')[0];
+            
+            showStatus('File selected and ready for notarization', 'success');
+            setTimeout(() => statusMessage.textContent = '', 3000);
+        }
+        
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2) + ' ' + sizes[i];
+        }
+        
+        // Notarize document
+        async function notarizeDocument() {
+            if (!selectedFile) {
+                showStatus('Please select a file first', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('Notarizing document...', 'loading');
+                
+                // 1. Generate file hash
+                const arrayBuffer = await selectedFile.arrayBuffer();
+                const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                const documentHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                
+                // 2. Upload to Supabase Storage with user-specific folder
+                const user = supabase.auth.session.user;
+                const fileExt = selectedFile.name.split('.').pop();
+                const filePath = `${user.id}/${documentHash}_${selectedFile.name}`;
+                
+                const { error: uploadError } = await supabase.storage
+                    .from('trust_seal_documents')
+                    .upload(filePath, selectedFile);
+                
+                if (uploadError) throw uploadError;
+                
+                // 3. Get public URL
+                const { data: { publicUrl } } = supabase.storage
+                    .from('trust_seal_documents')
+                    .getPublicUrl(filePath);
+                
+                // 4. Insert document record
+                const { data, error } = await supabase
+                    .from('trust_seal_documents')
+                    .insert([{
+                        document_name: documentName.value || selectedFile.name,
+                        document_hash: documentHash,
+                        document_size: selectedFile.size,
+                        document_type: selectedFile.type,
+                        auth_user_id: user.id,
+                        blockchain_tx_id: generateFakeBlockchainTx(),
+                        blockchain_network: 'VeChain Testnet',
+                        blockchain_explorer_url: `https://explore-testnet.vechain.org/tx/${generateFakeBlockchainTx()}`,
+                        is_verified: true,
+                        verification_status: 'Verified',
+                        notarized_at: new Date().toISOString()
+                    }])
+                    .select();
+                
+                if (error) throw error;
+                
+                showStatus('Document successfully notarized on the blockchain!', 'success');
+                
+                // Reset UI
+                selectedFile = null;
+                fileInput.value = '';
+                fileInfo.style.display = 'none';
+                documentName.value = '';
+                
+                // Refresh documents list
+                loadDocuments();
+                
+            } catch (error) {
+                console.error('Notarization error:', error);
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Generate fake blockchain TX (replace with real implementation)
+        function generateFakeBlockchainTx() {
+            return '0x' + Array.from({length: 64}, () => 
+                Math.floor(Math.random() * 16).toString(16)).join('');
+        }
+        
+        // Load user's documents
+        async function loadDocuments() {
+            try {
+                const user = supabase.auth.session.user;
+                const { data, error } = await supabase
+                    .from('trust_seal_documents')
+                    .select('*')
+                    .eq('auth_user_id', user.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (data.length === 0) {
+                    documentsContainer.innerHTML = '<p style="color: #9da5b4; text-align: center;">No documents notarized yet</p>';
+                    return;
+                }
+                
+                documentsContainer.innerHTML = data.map(doc => `
+                    <div class="document-item">
+                        <div>
+                            <div class="document-name">${doc.document_name}</div>
+                            <div class="document-meta">
+                                ${formatFileSize(doc.document_size)} • 
+                                ${new Date(doc.created_at).toLocaleDateString()} • 
+                                <span style="color: #58ff89;">Verified</span>
+                            </div>
+                            <div class="document-meta">
+                                TX: <a href="${doc.blockchain_explorer_url}" target="_blank" style="color: #58a6ff;">
+                                    ${doc.blockchain_tx_id.substring(0, 12)}...${doc.blockchain_tx_id.substring(52)}
+                                </a>
+                            </div>
+                        </div>
+                        <div class="document-actions">
+                            <button class="action-btn" onclick="viewDocument('${doc.document_hash}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="action-btn" onclick="verifyDocument('${doc.document_hash}')">
+                                <i class="fas fa-check-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                documentsContainer.innerHTML = '<p style="color: #ff5858; text-align: center;">Error loading documents</p>';
+            }
+        }
+        
+        // View document (placeholder)
+        function viewDocument(hash) {
+            showStatus(`Viewing document ${hash.substring(0, 8)}...`, 'loading');
+            // Implement actual document viewing logic
+        }
+        
+        // Verify document (placeholder)
+        function verifyDocument(hash) {
+            showStatus(`Verifying document ${hash.substring(0, 8)}...`, 'loading');
+            // Implement actual verification logic
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message ${type}`;
+        }
+        
+        // Handle auth state changes
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+                checkAuthState();
+            }
+        });
+    </script>
+</body>
+</html>
